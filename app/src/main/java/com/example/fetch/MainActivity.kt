@@ -14,6 +14,7 @@ import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.AdapterView
 import android.view.View
+import android.widget.Toast
 
 
 class MainActivity : AppCompatActivity() {
@@ -22,7 +23,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val recyclerView: RecyclerView = findViewById(R.id.recyclerView)
-        val spinnerListId: Spinner = findViewById<Spinner>(R.id.spinnerListId)
+        val spinner: Spinner = findViewById<Spinner>(R.id.spinnerListId)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
         RetrofitClient.apiService.fetchItems().enqueue(object : Callback<List<Item>> {
@@ -36,13 +37,12 @@ class MainActivity : AppCompatActivity() {
                     // Extract unique listIds and sort them
                     val listIds = items.mapNotNull { it.listId }.distinct().sorted()
 
-                    // Specify the type of items in ArrayAdapter
                     val adapter = ArrayAdapter<Int>(this@MainActivity, android.R.layout.simple_spinner_item, listIds)
                     adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
 
-                    spinnerListId.adapter = adapter
+                    spinner.adapter = adapter
 
-                    spinnerListId.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                    spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                         override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
                             val selectedListId = listIds[position]
                             val filteredItems = items.filter { it.listId == selectedListId }
@@ -53,11 +53,15 @@ class MainActivity : AppCompatActivity() {
                             recyclerView.adapter = ItemAdapter(items)
                         }
                     }
+                } else {
+                    // response failed, handle error
+                    Toast.makeText(baseContext, "failed to get valid response from server", Toast.LENGTH_LONG).show()
                 }
             }
 
             override fun onFailure(call: Call<List<Item>>, t: Throwable) {
                 // Handle errors, possibly show a user-friendly message or log
+                Toast.makeText(baseContext, "failed fetch data from server", Toast.LENGTH_LONG).show()
             }
         })
     }
